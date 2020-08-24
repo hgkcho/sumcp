@@ -1,0 +1,33 @@
+name: CI
+on:
+  push:
+    branches:
+      - "master"
+    pull_request:
+      - "master"
+
+jobs:
+  CI:
+    name: CI
+    strategy:
+      matrix:
+        go-version:[ 1.14.x ]
+    runs-on: [ ubuntu-latest, windows-latest, macos-latest ]
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: set up Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: golangci-lint
+        uses: reviewdog/action-golangci-lint@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          golangci_lint_flags: "--enable-all --exclude-use-default=false -D wsl -D testpackage"
+          level: "warning"
+          reporter: github-pr-check
+
+      - name: exec test
+        run: |
+          go test ./...
