@@ -18,8 +18,6 @@ jobs:
         go-version: 1.14.x
     - name: Add $GOPATH/bin to $PATH
       run: echo "::add-path::$(go env GOPATH)/bin"
-    - name: Build
-      run: go build .
     - name: Create Release
       id: create_release
       uses: actions/create-release@master
