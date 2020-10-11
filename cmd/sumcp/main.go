@@ -39,7 +39,7 @@ func (ee *ExitError) Error() string {
 	return fmt.Sprintf("%v", ee.err)
 }
 
-var version = "1.0.1"
+var version = "1.0.2"
 
 func main() {
 	name := "sumcp"
