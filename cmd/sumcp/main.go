@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/urfave/cli/v2"
 )
@@ -92,10 +94,13 @@ func main() {
 				}
 			}
 
+			start := time.Now()
 			if err := run(sources, target); err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				os.Exit(exitCodeErr)
 			}
+			end := time.Now()
+			fmt.Fprintf(os.Stdout, "Done (time : %v)\n", end.Sub(start))
 			return nil
 		},
 	}
@@ -124,18 +129,29 @@ func run(sources []string, target string) error {
 	defer file.Close()
 
 	existed := make(map[string]bool, len(sources))
+	wg := new(sync.WaitGroup)
+
 	for _, source := range sources {
+		source := source
 
-		if existed[source] {
-			return fmt.Errorf("duplicat source %s", source)
-		}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
 
-		b, err := ioutil.ReadFile(source)
-		if err != nil {
-			return err
-		}
+			if existed[source] {
+				fmt.Fprintf(os.Stderr, "duplicat source %s", source)
+			}
 
-		file.WriteString(string(b) + "\n")
+			b, err := ioutil.ReadFile(source)
+			info, err := os.Lstat(source)
+			fmt.Fprintf(os.Stdout, "filename %s \n", info.Name())
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			file.WriteString(string(b) + "\n")
+		}()
+		wg.Wait()
 	}
 	return nil
 }
